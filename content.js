@@ -16,6 +16,7 @@ document.addEventListener('focus', (event) => {
   // Apply highlight styles
   target.style.backgroundColor = '#1a3c34'; // Dark green background
   target.style.color = '#e6f5e6'; // Nearly white green shade for text
+  target.style.caretColor = '#ffffff'; // White cursor/caret
   // Apply placeholder style using a dynamic style element for ::placeholder
   const styleId = 'auto-bracket-placeholder-style';
   let styleElement = document.getElementById(styleId);
@@ -29,7 +30,7 @@ document.addEventListener('focus', (event) => {
   target.classList.add(uniqueClass);
   styleElement.textContent = `
     .${uniqueClass}::placeholder {
-      color: #2a5c4a !important; /* Slightly darker green for placeholder */
+      color: #d4e6d4 !important; /* Slightly darker than text color for placeholder */
     }
   `;
   // Store unique class for removal on blur
@@ -117,5 +118,43 @@ document.addEventListener('keydown', (event) => {
       target.selectionStart = target.selectionEnd = cursorPos + 1;
     }
     // Else, allow normal insertion (handled by browser)
+  }
+  // Handle Tab key for special behavior
+  else if (event.key === 'Tab') {
+    // Find the closest surrounding bracket pair
+    let leftPos = cursorPos - 1;
+    let rightPos = cursorPos;
+    let openingChar = null;
+    let closingChar = null;
+
+    // Search left for opening bracket
+    while (leftPos >= 0) {
+      const char = text[leftPos];
+      if (['(', '[', '{', '"', "'"].includes(char)) {
+        openingChar = char;
+        closingChar = pairs[openingChar];
+        break;
+      }
+      leftPos--;
+    }
+
+    // Search right for closing bracket
+    if (openingChar) {
+      while (rightPos < text.length) {
+        if (text[rightPos] === closingChar) {
+          // Found the closing bracket
+          event.preventDefault();
+          // Move cursor to after the closing bracket (plus any trailing space)
+          let newCursorPos = rightPos + 1;
+          if (text[newCursorPos] === ' ') {
+            newCursorPos++; // Include the trailing space as per table
+          }
+          target.selectionStart = target.selectionEnd = newCursorPos;
+          break;
+        }
+        rightPos++;
+      }
+    }
+    // If no valid bracket pair is found, allow default Tab behavior
   }
 });
