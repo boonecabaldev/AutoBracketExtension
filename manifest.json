@@ -1,5 +1,5 @@
 {
-  "name": "AutoBracket Extension",
+  "name": "AutoBracketExtension",
   "version": "1.0",
   "description": "Implements IDE-like auto-bracketing for parentheses, brackets, braces, and quotes in any textbox on a webpage.",
   "manifest_version": 3,
