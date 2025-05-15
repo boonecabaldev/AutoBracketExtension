@@ -17,3 +17,8 @@
 | 3. | Tab | '(X) _' |
 
 **NOTE:** Respect all whitespace in table. For instance, in steps 1, 2, and three there is an extra Space character at the end of the result text. This is to move the cursor one character beyond the next closing bracketing character.
+
+4. Keyboard shortcut: Ctrl+M toggles all of the extension functionality on/off.
+    - When extension toggled off, overlay a red X over the extension icon.
+    - When extension toggled on, overlag a green checkmark over extension icon.
+    - When the extension is toggled off, then both the highlighting and auto-bracketing features are disabled, and when extension is toggled on, both the highlighting and auto-bracketing features are enabled
