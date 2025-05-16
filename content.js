@@ -81,9 +81,20 @@ function handleKeydown(event) {
     '[': ']',
     '{': '}',
     '"': '"',
-    "'": "'"
+    '*': '*'
   };
 
+  // --- Smart Backspace for bracket pairs ---
+  if (event.key === 'Backspace' && !hasSelection && cursorPos > 0) {
+    const prevChar = text[cursorPos - 1];
+    const nextChar = text[cursorPos];
+    if (pairs[prevChar] && nextChar === pairs[prevChar]) {
+      event.preventDefault();
+      target.value = text.slice(0, cursorPos - 1) + text.slice(cursorPos + 1);
+      target.selectionStart = target.selectionEnd = cursorPos - 1;
+      return;
+    }
+  }
   if (pairs[event.key]) {
     event.preventDefault();
     const closingChar = pairs[event.key];
@@ -110,7 +121,7 @@ function handleKeydown(event) {
       target.selectionStart = target.selectionEnd = newCursorPos;
     }, 0);
   }
-  else if ([')', ']', '}', '"', "'"].includes(event.key)) {
+  else if ([')', ']', '}', '"', '*'].includes(event.key)) {
     if (text[cursorPos] === event.key) {
       event.preventDefault();
       target.selectionStart = target.selectionEnd = cursorPos + 1;
@@ -124,7 +135,7 @@ function handleKeydown(event) {
 
     while (leftPos >= 0) {
       const char = text[leftPos];
-      if (['(', '[', '{', '"', "'"].includes(char)) {
+      if (['(', '[', '{', '"', '*'].includes(char)) {
         openingChar = char;
         closingChar = pairs[openingChar];
         break;
