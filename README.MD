@@ -7,11 +7,11 @@ A browser extension that provides IDE-like auto-bracketing and textbox highlight
 ### 1. Auto-Bracketing
 
 - Automatically completes bracket/quote pairs when typing:
-  - Parentheses: `(` → `(_) `
-  - Square brackets: `[` → `[_] `
-  - Curly braces: `{` → `{_} `
-  - Quotes: `"` → `"_" `
-  - Asterisks: `*` → `*_* `
+  - Parentheses: `(` → `(_)Space`
+  - Square brackets: `[` → `[_]Space`
+  - Curly braces: `{` → `{_}Space`
+  - Quotes: `"` → `"_"Space`
+  - Asterisks: `*` → `*_*Space`
 - When text is selected, wraps the selection with the pair
 - Smart cursor placement between pairs
 - Pressing closing character when it already exists moves cursor past it
@@ -25,9 +25,9 @@ Example workflow:
 
 | Step | Key Pressed | Result           |
 |------|------------|-------------------|
-| 1    | `(`        | `(_) `            |
-| 2    | `X`        | `(X_) `           |
-| 3    | `Tab`      | `(X) _`           |
+| 1    | `(`        | `(_)Space`            |
+| 2    | `X`        | `(X_)Space`           |
+| 3    | `Tab`      | `(X)Space_`           |
 
 ### 3. Textbox Highlighting
 
