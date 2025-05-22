@@ -27,7 +27,7 @@ function applyHighlightStyles(target) {
   target.classList.add(uniqueClass);
   styleElement.textContent = `
     .${uniqueClass}::placeholder {
-      color: #d4e6d4 !important;
+      color: #a1cda1 !important;
     }
   `;
   target.dataset.autoBracketClass = uniqueClass;
