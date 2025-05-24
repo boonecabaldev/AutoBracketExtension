@@ -21,13 +21,21 @@ A browser extension that provides IDE-like auto-bracketing and textbox highlight
 - When inside a bracket/quote pair, Tab jumps to after the closing character
 - Respects trailing space after pairs (as shown in examples below)
 
-Example workflow:
+Example workflow (correct behavior):
 
-| Step | Key Pressed | Result           |
-|------|------------|-------------------|
-| 1    | `(`        | `(_)Space`            |
-| 2    | `X`        | `(X_)Space`           |
-| 3    | `Tab`      | `(X)Space_`           |
+| Step | Key Pressed | Result        |
+|------|-------------|---------------|
+| 1    | `(`         | `(_)`         |
+| 2    | `(`         | `((_))`       |
+| 3    | `Tab`       | `(() _)`      |
+| 4    | `Tab`       | `(()) _`      |
+
+Here, `_` indicates the cursor position and `Space` means a space character is present.
+
+**Note:**  
+- No spaces should be inserted after the closing bracket when typing a pair—spaces are only inserted by pressing Tab.
+- After the first Tab, a space is inserted if not already present, and the cursor remains just after the closing bracket.
+- After the second Tab, the cursor moves after the space.
 
 ### 3. Textbox Highlighting
 

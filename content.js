@@ -105,12 +105,12 @@ function handleKeydown(event) {
     let newText, newCursorPos, highlightStart, highlightEnd;
 
     if (hasSelection) {
-      newText = text.slice(0, cursorPos) + event.key + selectedText + closingChar + ' ' + text.slice(selectionEnd);
+      newText = text.slice(0, cursorPos) + event.key + selectedText + closingChar + text.slice(selectionEnd);
       newCursorPos = cursorPos + selectedText.length + 2;
       highlightStart = cursorPos;
       highlightEnd = cursorPos + selectedText.length + 2;
     } else {
-      newText = text.slice(0, cursorPos) + event.key + closingChar + ' ' + text.slice(cursorPos);
+      newText = text.slice(0, cursorPos) + event.key + closingChar + text.slice(cursorPos);
       newCursorPos = cursorPos + 1;
       highlightStart = cursorPos;
       highlightEnd = cursorPos + 2;
@@ -151,11 +151,10 @@ function handleKeydown(event) {
       while (rightPos < text.length) {
         if (text[rightPos] === closingChar) {
           event.preventDefault();
-          let newCursorPos = rightPos + 1;
-          if (text[newCursorPos] === ' ') {
-            newCursorPos++;
-          }
-          target.selectionStart = target.selectionEnd = newCursorPos;
+          let afterClosing = rightPos + 1;
+          // Always insert a space after the closing char and move cursor after it
+          target.value = text.slice(0, afterClosing) + ' ' + text.slice(afterClosing);
+          target.selectionStart = target.selectionEnd = afterClosing + 1;
           break;
         }
         rightPos++;
