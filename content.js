@@ -90,7 +90,11 @@ function handleKeydown(event) {
     const nextChar = text[cursorPos];
     if (pairs[prevChar] && nextChar === pairs[prevChar]) {
       event.preventDefault();
-      target.value = text.slice(0, cursorPos - 1) + text.slice(cursorPos + 1);
+      let charactersToRemove = 2; // For the pair
+      if (text[cursorPos + 1] === ' ') { // Check for trailing space
+        charactersToRemove++;
+      }
+      target.value = text.slice(0, cursorPos - 1) + text.slice(cursorPos -1 + charactersToRemove);
       target.selectionStart = target.selectionEnd = cursorPos - 1;
       return;
     }
