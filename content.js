@@ -102,26 +102,25 @@ const autoBracket = (() => {
         // If cursor is before or at the closer, move after closer and insert space if not present
         if (cursorPos <= closerPos) {
           const afterCloser = closerPos + 1;
-          if (text[afterCloser] === " ") {
+          if (text[afterCloser] === ' ') {
             // Space already present, move cursor after space
             return {
               newText: text,
-              newCursorPos: afterCloser + 1,
+              newCursorPos: afterCloser + 1
             };
           } else {
             // Insert space after closer, cursor just after closer (before space)
             return {
-              newText:
-                text.slice(0, afterCloser) + " " + text.slice(afterCloser),
-              newCursorPos: afterCloser + 1,
+              newText: text.slice(0, afterCloser) + ' ' + text.slice(afterCloser),
+              newCursorPos: afterCloser + 1
             };
           }
         }
         // If cursor is after closer but before space, move after space
-        if (cursorPos === closerPos + 1 && text[cursorPos] === " ") {
+        if (cursorPos === closerPos + 1 && text[cursorPos] === ' ') {
           return {
             newText: text,
-            newCursorPos: cursorPos + 1,
+            newCursorPos: cursorPos + 1
           };
         }
         return null;
@@ -133,19 +132,19 @@ const autoBracket = (() => {
     if (
       cursorPos > 0 &&
       cursorPos < text.length &&
-      (text[cursorPos] === '"' || text[cursorPos] === "*") &&
+      (text[cursorPos] === '"' || text[cursorPos] === '*') &&
       text.slice(0, cursorPos).includes(text[cursorPos])
     ) {
       const afterCloser = cursorPos + 1;
-      if (text[afterCloser] === " ") {
+      if (text[afterCloser] === ' ') {
         return {
           newText: text,
-          newCursorPos: afterCloser + 1,
+          newCursorPos: afterCloser + 1
         };
       } else {
         return {
-          newText: text.slice(0, afterCloser) + " " + text.slice(afterCloser),
-          newCursorPos: afterCloser + 1,
+          newText: text.slice(0, afterCloser) + ' ' + text.slice(afterCloser),
+          newCursorPos: afterCloser + 1
         };
       }
     }
