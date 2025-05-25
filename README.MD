@@ -33,6 +33,7 @@ Example workflow (correct behavior):
 Here, `_` indicates the cursor position and `Space` means a space character is present.
 
 **Note:**  
+
 - No spaces should be inserted after the closing bracket when typing a pair—spaces are only inserted by pressing Tab.
 - After the first Tab, a space is inserted if not already present, and the cursor remains just after the closing bracket.
 - After the second Tab, the cursor moves after the space.

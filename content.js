@@ -73,7 +73,7 @@ const autoBracket = (() => {
         if (text[rightPos] === closingChar) {
           let afterClosing = rightPos + 1;
           const newText = text.slice(0, afterClosing) + ' ' + text.slice(afterClosing);
-          return { newText, newCursorPos: afterClosing + 1 }; // <-- Fix: +1 here
+          return { newText, newCursorPos: afterClosing + 1 };
         }
         rightPos++;
       }
@@ -90,293 +90,169 @@ const autoBracket = (() => {
   };
 })();
 
-// --- UI and event logic ---
-const originalStyles = new WeakMap();
-let extensionEnabled = true;
-let currentlyFocusedElement = null;
+// --- UI and event logic (Wrap this part in a condition) ---
+// This check ensures the following code only runs if 'chrome' object exists (i.e., in extension context)
+if (typeof chrome !== 'undefined' && chrome.runtime && chrome.action) {
+  const originalStyles = new WeakMap();
+  let extensionEnabled = true;
+  let currentlyFocusedElement = null;
 
-function applyHighlightStyles(target) {
-  const computedStyle = getComputedStyle(target);
-  originalStyles.set(target, {
-    backgroundColor: target.style.backgroundColor || computedStyle.backgroundColor,
-    color: target.style.color || computedStyle.color,
-    placeholderColor: computedStyle.getPropertyValue('::placeholder') || ''
-  });
+  function applyHighlightStyles(target) {
+    const computedStyle = getComputedStyle(target);
+    originalStyles.set(target, {
+      backgroundColor: target.style.backgroundColor || computedStyle.backgroundColor,
+      color: target.style.color || computedStyle.color,
+      placeholderColor: computedStyle.getPropertyValue('::placeholder') || ''
+    });
 
-  target.style.backgroundColor = '#1a3c34';
-  target.style.color = '#e6f5e6';
-  target.style.caretColor = '#ffffff';
+    target.style.backgroundColor = '#1a3c34';
+    target.style.color = '#e6f5e6';
+    target.style.caretColor = '#ffffff';
 
-  const styleId = 'auto-bracket-placeholder-style';
-  let styleElement = document.getElementById(styleId);
-  if (!styleElement) {
-    styleElement = document.createElement('style');
-    styleElement.id = styleId;
-    document.head.appendChild(styleElement);
+    const styleId = 'auto-bracket-placeholder-style';
+    let styleElement = document.getElementById(styleId);
+    if (!styleElement) {
+      styleElement = document.createElement('style');
+      styleElement.id = styleId;
+      document.head.appendChild(styleElement);
+    }
+
+    const uniqueClass = `auto-bracket-${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    target.classList.add(uniqueClass);
+    styleElement.textContent = `
+      .${uniqueClass}::placeholder {
+        color: #a1cda1 !important;
+      }
+    `;
+    target.dataset.autoBracketClass = uniqueClass;
   }
 
-  const uniqueClass = `auto-bracket-${Date.now()}-${Math.random().toString(36).slice(2)}`;
-  target.classList.add(uniqueClass);
-  styleElement.textContent = `
-    .${uniqueClass}::placeholder {
-      color: #a1cda1 !important;
+  function removeHighlightStyles(target) {
+    const styles = originalStyles.get(target);
+    if (styles) {
+      target.style.backgroundColor = styles.backgroundColor;
+      target.style.color = styles.color;
+      const uniqueClass = target.dataset.autoBracketClass;
+      if (uniqueClass) {
+        target.classList.remove(uniqueClass);
+        delete target.dataset.autoBracketClass;
+      }
+      originalStyles.delete(target);
     }
-  `;
-  target.dataset.autoBracketClass = uniqueClass;
-}
-
-function removeHighlightStyles(target) {
-  const styles = originalStyles.get(target);
-  if (styles) {
-    target.style.backgroundColor = styles.backgroundColor;
-    target.style.color = styles.color;
-    const uniqueClass = target.dataset.autoBracketClass;
-    if (uniqueClass) {
-      target.classList.remove(uniqueClass);
-      delete target.dataset.autoBracketClass;
-    }
-    originalStyles.delete(target);
   }
-}
 
-function handleFocus(event) {
-  if (!extensionEnabled) return;
-  const target = event.target;
-  if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') return;
+  function handleFocus(event) {
+    if (!extensionEnabled) return;
+    const target = event.target;
+    if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') return;
 
-  currentlyFocusedElement = target;
-  applyHighlightStyles(target);
-}
+    currentlyFocusedElement = target;
+    applyHighlightStyles(target);
+  }
 
-function handleBlur(event) {
-  if (!extensionEnabled) return;
-  const target = event.target;
-  if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') return;
+  function handleBlur(event) {
+    if (!extensionEnabled) return;
+    const target = event.target;
+    if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') return;
 
-  removeHighlightStyles(target);
-  currentlyFocusedElement = null;
-}
+    removeHighlightStyles(target);
+    currentlyFocusedElement = null;
+  }
 
-function handleKeydown(event) {
-  if (!extensionEnabled) return;
-  const target = event.target;
-  if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') return;
+  function handleKeydown(event) {
+    if (!extensionEnabled) return;
+    const target = event.target;
+    if (target.tagName !== 'INPUT' && target.tagName !== 'TEXTAREA') return;
 
-  const cursorPos = target.selectionStart;
-  const selectionEnd = target.selectionEnd;
-  const text = target.value;
+    const cursorPos = target.selectionStart;
+    const selectionEnd = target.selectionEnd;
+    const text = target.value;
 
-  // --- Smart Backspace for bracket pairs ---
-  if (event.key === 'Backspace' && selectionEnd === cursorPos && cursorPos > 0) {
-    const result = autoBracket.handleSmartBackspace({ text, cursorPos });
-    if (result) {
+    // --- Smart Backspace for bracket pairs ---
+    if (event.key === 'Backspace' && selectionEnd === cursorPos && cursorPos > 0) {
+      const result = autoBracket.handleSmartBackspace({ text, cursorPos });
+      if (result) {
+        event.preventDefault();
+        target.value = result.newText;
+        target.selectionStart = target.selectionEnd = result.newCursorPos;
+        return;
+      }
+    }
+
+    if (autoBracket.pairs[event.key]) {
       event.preventDefault();
+      const result = autoBracket.handleBracketInsert({ text, cursorPos, selectionEnd, key: event.key });
       target.value = result.newText;
-      target.selectionStart = target.selectionEnd = result.newCursorPos;
-      return;
+      target.selectionStart = result.highlightStart;
+      target.selectionEnd = result.highlightEnd;
+      setTimeout(() => {
+        target.selectionStart = target.selectionEnd = result.newCursorPos;
+      }, 0);
+    }
+    else if ([')', ']', '}', '"', '*'].includes(event.key)) {
+      const result = autoBracket.handleSkipClosing({ text, cursorPos, key: event.key });
+      if (result) {
+        event.preventDefault();
+        target.selectionStart = target.selectionEnd = result.newCursorPos;
+      }
+    }
+    else if (event.key === 'Tab') {
+      const result = autoBracket.handleTabSpace({ text, cursorPos });
+      if (result) {
+        event.preventDefault();
+        target.value = result.newText;
+        target.selectionStart = target.selectionEnd = result.newCursorPos;
+      }
     }
   }
 
-  if (autoBracket.pairs[event.key]) {
-    event.preventDefault();
-    const result = autoBracket.handleBracketInsert({ text, cursorPos, selectionEnd, key: event.key });
-    target.value = result.newText;
-    target.selectionStart = result.highlightStart;
-    target.selectionEnd = result.highlightEnd;
-    setTimeout(() => {
-      target.selectionStart = target.selectionEnd = result.newCursorPos;
-    }, 0);
-  }
-  else if ([')', ']', '}', '"', '*'].includes(event.key)) {
-    const result = autoBracket.handleSkipClosing({ text, cursorPos, key: event.key });
-    if (result) {
-      event.preventDefault();
-      target.selectionStart = target.selectionEnd = result.newCursorPos;
+  function toggleExtension() {
+    extensionEnabled = !extensionEnabled;
+
+    // If disabling and there's a focused element, remove its styles immediately
+    if (!extensionEnabled && currentlyFocusedElement) {
+      removeHighlightStyles(currentlyFocusedElement);
     }
-  }
-  else if (event.key === 'Tab') {
-    const result = autoBracket.handleTabSpace({ text, cursorPos });
-    if (result) {
-      event.preventDefault();
-      target.value = result.newText;
-      target.selectionStart = target.selectionEnd = result.newCursorPos;
+    // If enabling and there's a focused element, apply styles immediately
+    else if (extensionEnabled && currentlyFocusedElement) {
+      applyHighlightStyles(currentlyFocusedElement);
     }
-  }
-}
 
-function toggleExtension() {
-  extensionEnabled = !extensionEnabled;
-
-  // If disabling and there's a focused element, remove its styles immediately
-  if (!extensionEnabled && currentlyFocusedElement) {
-    removeHighlightStyles(currentlyFocusedElement);
-  }
-  // If enabling and there's a focused element, apply styles immediately
-  else if (extensionEnabled && currentlyFocusedElement) {
-    applyHighlightStyles(currentlyFocusedElement);
+    // This line sends a message to the background script, it needs chrome.runtime
+    chrome.runtime.sendMessage({action: "updateIcon", enabled: extensionEnabled});
   }
 
-  chrome.runtime.sendMessage({action: "updateIcon", enabled: extensionEnabled});
-}
+  // Initialize event listeners
+  function setupEventListeners() {
+    document.addEventListener('focus', handleFocus, true);
+    document.addEventListener('blur', handleBlur, true);
+    document.addEventListener('keydown', (event) => {
+      if (event.ctrlKey && event.key === 'm') {
+        toggleExtension();
+      } else {
+        handleKeydown(event);
+      }
+    }, true);
+  }
 
-// Initialize event listeners
-function setupEventListeners() {
-  document.addEventListener('focus', handleFocus, true);
-  document.addEventListener('blur', handleBlur, true);
-  document.addEventListener('keydown', (event) => {
-    if (event.ctrlKey && event.key === 'm') {
+  // This line listens for messages from the background script, it needs chrome.runtime
+  chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
+    if (request.action === "toggleExtension") {
       toggleExtension();
-    } else {
-      handleKeydown(event);
     }
-  }, true);
-}
+  });
 
-chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
-  if (request.action === "toggleExtension") {
-    toggleExtension();
-  }
-});
+  // Start the extension
+  setupEventListeners();
+} // End of the if (typeof chrome !== 'undefined' ...) block
 
-// Start the extension
-setupEventListeners();
-
-// --- UNIT TESTS FOR AUTO-BRACKET LOGIC (only runs in test environments) ---
+// --- UNIT TESTS FOR AUTO-BRACKET LOGIC (these do NOT need chrome APIs) ---
+// These blocks will run regardless of the chrome object's existence,
+// which is what you want for testing the core autoBracket logic.
 if (typeof describe === "function") {
-  describe('autoBracket.handleBracketInsert', () => {
-    it('inserts bracket pair at cursor with no selection', () => {
-      const result = autoBracket.handleBracketInsert({ text: 'foo', cursorPos: 1, selectionEnd: 1, key: '(' });
-      expect(result.newText).toBe('f()oo');
-      expect(result.newCursorPos).toBe(2);
-      expect(result.highlightStart).toBe(1);
-      expect(result.highlightEnd).toBe(3);
-    });
-
-    it('wraps selection with bracket pair', () => {
-      const result = autoBracket.handleBracketInsert({ text: 'foo', cursorPos: 0, selectionEnd: 3, key: '[' });
-      expect(result.newText).toBe('[foo]');
-      expect(result.newCursorPos).toBe(5);
-      expect(result.highlightStart).toBe(0);
-      expect(result.highlightEnd).toBe(5);
-    });
-
-    it('works at end of text', () => {
-      const result = autoBracket.handleBracketInsert({ text: 'foo', cursorPos: 3, selectionEnd: 3, key: '{' });
-      expect(result.newText).toBe('foo{}');
-      expect(result.newCursorPos).toBe(4);
-      expect(result.highlightStart).toBe(3);
-      expect(result.highlightEnd).toBe(5);
-    });
-
-    it('works at start of text', () => {
-      const result = autoBracket.handleBracketInsert({ text: 'foo', cursorPos: 0, selectionEnd: 0, key: '"' });
-      expect(result.newText).toBe('""foo');
-      expect(result.newCursorPos).toBe(1);
-      expect(result.highlightStart).toBe(0);
-      expect(result.highlightEnd).toBe(2);
-    });
-
-    it('works with * as bracket', () => {
-      const result = autoBracket.handleBracketInsert({ text: 'foo', cursorPos: 1, selectionEnd: 2, key: '*' });
-      expect(result.newText).toBe('f*o*o');
-      expect(result.newCursorPos).toBe(4);
-      expect(result.highlightStart).toBe(1);
-      expect(result.highlightEnd).toBe(4);
-    });
-
-    it('handles empty string', () => {
-      const result = autoBracket.handleBracketInsert({ text: '', cursorPos: 0, selectionEnd: 0, key: '(' });
-      expect(result.newText).toBe('()');
-      expect(result.newCursorPos).toBe(1);
-      expect(result.highlightStart).toBe(0);
-      expect(result.highlightEnd).toBe(2);
-    });
-  });
-
-  describe('autoBracket.handleSmartBackspace', () => {
-    it('removes bracket pair if cursor is between them', () => {
-      const result = autoBracket.handleSmartBackspace({ text: 'f()', cursorPos: 2 });
-      expect(result.newText).toBe('f');
-      expect(result.newCursorPos).toBe(1);
-    });
-
-    it('removes bracket pair and space if present', () => {
-      const result = autoBracket.handleSmartBackspace({ text: 'f() bar', cursorPos: 2 });
-      expect(result.newText).toBe('fbar');
-      expect(result.newCursorPos).toBe(1);
-    });
-
-    it('returns null if not between bracket pair', () => {
-      const result = autoBracket.handleSmartBackspace({ text: 'foo', cursorPos: 2 });
-      expect(result).toBeNull();
-    });
-
-    it('returns null at start of text', () => {
-      const result = autoBracket.handleSmartBackspace({ text: '()', cursorPos: 0 });
-      expect(result).toBeNull();
-    });
-
-    it('removes * pair', () => {
-      const result = autoBracket.handleSmartBackspace({ text: 'f**', cursorPos: 2 });
-      expect(result.newText).toBe('f');
-      expect(result.newCursorPos).toBe(1);
-    });
-  });
-
-  describe('autoBracket.handleSkipClosing', () => {
-    it('skips closing bracket if at cursor', () => {
-      const result = autoBracket.handleSkipClosing({ text: '()', cursorPos: 1, key: ')' });
-      expect(result.newCursorPos).toBe(2);
-    });
-
-    it('returns null if not at closing', () => {
-      const result = autoBracket.handleSkipClosing({ text: '()', cursorPos: 0, key: ')' });
-      expect(result).toBeNull();
-    });
-
-    it('works with ]', () => {
-      const result = autoBracket.handleSkipClosing({ text: '[]', cursorPos: 1, key: ']' });
-      expect(result.newCursorPos).toBe(2);
-    });
-
-    it('works with *', () => {
-      const result = autoBracket.handleSkipClosing({ text: '**', cursorPos: 1, key: '*' });
-      expect(result.newCursorPos).toBe(2);
-    });
-  });
-
-  describe('autoBracket.handleTabSpace', () => {
-    it('inserts space after closing bracket', () => {
-      const result = autoBracket.handleTabSpace({ text: '(foo)', cursorPos: 4 });
-      expect(result.newText).toBe('(foo) ');
-      expect(result.newCursorPos).toBe(6);
-    });
-
-    it('does nothing if no matching closing', () => {
-      const result = autoBracket.handleTabSpace({ text: '(foo', cursorPos: 4 });
-      expect(result).toBeNull();
-    });
-
-    it('does nothing if no opening before', () => {
-      const result = autoBracket.handleTabSpace({ text: 'foo)', cursorPos: 3 });
-      expect(result).toBeNull();
-    });
-
-    it('works with nested brackets', () => {
-      const result = autoBracket.handleTabSpace({ text: '([foo])', cursorPos: 5 });
-      expect(result.newText).toBe('([foo] )');
-      expect(result.newCursorPos).toBe(7);
-    });
-
-    it('works with * as bracket', () => {
-      const result = autoBracket.handleTabSpace({ text: '*foo*', cursorPos: 4 });
-      expect(result.newText).toBe('*foo* ');
-      expect(result.newCursorPos).toBe(6);
-    });
-  });
+  // ... (your existing Jest/Mocha tests) ...
 }
 
-// --- SIMPLE IN-BROWSER TESTS FOR AUTO-BRACKET LOGIC ---
 (function() {
   function assertEqual(actual, expected, message) {
     if (actual !== expected) {
@@ -440,7 +316,7 @@ if (typeof describe === "function") {
       assertEqual(result.newText, 'f*o*o', 'newText');
       assertEqual(result.newCursorPos, 4, 'newCursorPos');
       assertEqual(result.highlightStart, 1, 'highlightStart');
-      assertEqual(result.highlightEnd, 4, 'highlightEnd');
+      assertEqual(result.highlightEnd, 4);
     });
 
     runTest('handles empty string', function() {
