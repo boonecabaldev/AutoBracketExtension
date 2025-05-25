@@ -30,9 +30,49 @@ Example workflow (correct behavior):
 | 3    | `Tab`       | `(() _)`      |
 | 4    | `Tab`       | `(()) _`      |
 
+| Step | Key Pressed | Result        |
+|------|-------------|---------------|
+| 1    | `{`         | `{_}`         |
+| 2    | `{`         | `{{_}}`       |
+| 3    | `Tab`       | `{{} _}`      |
+| 4    | `Tab`       | `{{}} _`      |
+
+| Step | Key Pressed | Result        |
+|------|-------------|---------------|
+| 1    | `[`         | `[_]`         |
+| 2    | `[`         | `[[_]]`       |
+| 3    | `Tab`       | `[[] _]`      |
+| 4    | `Tab`       | `[[]] _`      |
+
+| Step | Key Pressed | Result        |
+|------|-------------|---------------|
+| 1    | `"`         | `"_"`         |
+| 2    | `"`         | `""_""`       |
+| 3    | `Tab`       | `""" _"`      |
+| 4    | `Tab`       | `"""" _`      |
+
+| Step | Key Pressed | Result        |
+|------|-------------|---------------|
+| 1    | `*`         | `*_*`         |
+| 2    | `*`         | `**_**`       |
+| 3    | `Tab`       | `*** _*`      |
+| 4    | `Tab`       | `**** _`      |
+
 Here, `_` indicates the cursor position and `Space` means a space character is present.
 
+#### Tabbing Functionality for Nested Bracketing Characters
+
+I need the tabbing functionality to work for nested bracketing characters of different types, like ([]), as in following example:
+
+| Step | Key Pressed | Result        |
+|------|-------------|---------------|
+| 1    | `(`         | `(_)`         |
+| 2    | `[`         | `([_])`       |
+| 3    | `Tab`       | `([] _)`      |
+| 4    | `Tab`       | `([]) _`      |
+
 **Note:**  
+
 - No spaces should be inserted after the closing bracket when typing a pair—spaces are only inserted by pressing Tab.
 - After the first Tab, a space is inserted if not already present, and the cursor remains just after the closing bracket.
 - After the second Tab, the cursor moves after the space.

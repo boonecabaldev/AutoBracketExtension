@@ -4,5 +4,5 @@
 2. Textbox highlighting
     - On focused textbox: highlight textbox by giving it a dark green background, nearly white shade of green, and placeholder text is slightly darker
     - On lost focus textbox: textbox formatting is restored to original formatting
-    
+
 Add feature 2. to this extension without breaking the functionality of 1.
